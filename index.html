@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Trivia & IQ Challenge</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0f172a;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #e2e8f0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 550px;
+            padding: 30px;
+            background: #1e293b;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            border: 1px solid #334155;
+            text-align: center;
+        }
+        h1 {
+            color: #38bdf8;
+            font-size: 26px;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        p {
+            color: #94a3b8;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        .btn {
+            background: #0284c7;
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 15px;
+        }
+        .btn:hover {
+            background: #0369a1;
+        }
+        
+        /* QUIZ SCREEN ELEMENTS */
+        #quiz-screen, #result-screen {
+            display: none;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #334155;
+            border-radius: 3px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: #38bdf8;
+            transition: width 0.3s ease;
+        }
+        #question-text {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 25px;
+            min-height: 55px;
+        }
+        .options-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .option-btn {
+            background: #1e293b;
+            color: #e2e8f0;
+            border: 2px solid #475569;
+            padding: 14px;
+            font-size: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+        }
+        .option-btn:hover {
+            background: #334155;
+            border-color: #64748b;
+        }
+        .option-btn.correct {
+            background: #15803d !important;
+            border-color: #22c55e !important;
+        }
+        .option-btn.wrong {
+            background: #b91c1c !important;
+            border-color: #ef4444 !important;
+        }
+
+        /* PRIZE BUTTON */
+        .prize-btn {
+            background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+            color: #0f172a;
+            font-size: 18px;
+            padding: 16px 36px;
+            box-shadow: 0 0 20px rgba(234, 179, 8, 0.4);
+            border: none;
+            animation: pulse 1.5s infinite;
+        }
+        .prize-btn:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 30px rgba(234, 179, 8, 0.7);
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.04); }
+            100% { transform: scale(1); }
+        }
+
+        /* JUMPSCARE OVERLAY */
+        #jumpscare-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            background-color: black;
+        }
+        .flashing {
+            animation: flashAnimation 0.03s infinite; /* Slightly faster flash for intensity */
+        }
+        @keyframes flashAnimation {
+            0%, 49% { background-color: #050000; }
+            50%, 99% { background-color: #7a0000; } /* Deep blood red flash alternative */
+            100% { background-color: #000000; }
+        }
+        .shaking {
+            animation: shakeAnimation 0.05s infinite; /* Faster shake */
+        }
+        @keyframes shakeAnimation {
+            0% { transform: translate(3px, 2px) rotate(0deg) scale(1.3); }
+            10% { transform: translate(-2px, -3px) rotate(-3deg) scale(1.4); }
+            20% { transform: translate(-4px, 0px) rotate(2deg) scale(1.3); }
+            30% { transform: translate(0px, 3px) rotate(0deg) scale(1.5); }
+            40% { transform: translate(2px, -2px) rotate(2deg) scale(1.3); }
+            50% { transform: translate(-2px, 3px) rotate(-2deg) scale(1.4); }
+            60% { transform: translate(-4px, 2px) rotate(0deg) scale(1.5); }
+            70% { transform: translate(3px, 2px) rotate(-3deg) scale(1.3); }
+            80% { transform: translate(-2px, -2px) rotate(2deg) scale(1.4); }
+            90% { transform: translate(3px, 3px) rotate(0deg) scale(1.3); }
+            100% { transform: translate(2px, -3px) rotate(-2deg) scale(1.5); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen" class="container">
+        <h1>Global General Knowledge & IQ Test</h1>
+        <p>Welcome to the standard tier adaptive knowledge metric. You will be presented with 10 quick-fire questions covering geography, science, and history.</p>
+        <p>Complete all 10 questions cleanly to qualify for the high-scorer reward matrix.</p>
+        <button class="btn" onclick="startQuiz()">Begin Assessment</button>
+    </div>
+
+    <div id="quiz-screen" class="container">
+        <div class="progress-bar">
+            <div id="progress" class="progress-fill"></div>
+        </div>
+        <div id="question-text">Loading question...</div>
+        <div class="options-group" id="options-box"></div>
+    </div>
+
+    <div id="result-screen" class="container">
+        <h1 style="color: #22c55e;">Assessment Complete!</h1>
+        <p>Excellent concentration. You ranked higher than 94.2% of previous global participants on this block.</p>
+        <h2 style="font-size: 28px; margin: 15px 0; color: #eab308;">Your Score: <span id="final-score">0</span> / 10</h2>
+        <p>Based on your performance tier, your digital platform reward certification code has been generated.</p>
+        <button class="btn prize-btn" onclick="triggerJumpscare()">🎁 CLAIM YOUR PRIZE</button>
+    </div>
+
+    <div id="jumpscare-overlay" class="flashing">
+        <svg class="shaking" width="95vw" height="95vh" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <path d="M 25 70 C 25 35, 85 35, 85 70 C 85 105, 25 105, 25 70 Z" fill="#0c0202" stroke="#400" stroke-width="2"/>
+            <path d="M 115 65 C 115 25, 175 25, 175 65 C 175 105, 115 105, 115 65 Z" fill="#0c0202" stroke="#400" stroke-width="2"/>
+
+            <ellipse cx="55" cy="70" rx="24" ry="28" fill="#e2e8f0" stroke="#700" stroke-width="4" transform="rotate(-5 55 70)"/>
+            <path d="M 35 70 Q 45 72 50 68 M 75 70 Q 65 68 60 72 M 55 50 Q 53 60 55 62" stroke="red" stroke-width="1" fill="none"/>
+            <path d="M 54 65 L 56 75 M 51 70 L 59 70" stroke="#ff0000" stroke-width="3"/> <ellipse cx="145" cy="65" rx="20" ry="32" fill="#f8fafc" stroke="#700" stroke-width="5" transform="rotate(12 145 65)"/>
+            <path d="M 130 65 Q 138 63 140 67 M 160 65 Q 152 67 148 62" stroke="red" stroke-width="1" fill="none"/>
+            <polygon points="143,53 147,53 146,77 142,77" fill="#ff0000"/> <path d="M 20 115 Q 100 75 180 115 Q 110 205 20 115" fill="#050000" stroke="#900" stroke-width="4" />
+            
+            <path d="M 25 116 L 38 142 L 45 117 L 60 152 L 68 119 L 85 158 L 95 120 L 112 161 L 122 120 L 138 154 L 145 118 L 160 144 L 168 116" fill="#f1f5f9" stroke="#3a3a3a" stroke-width="1"/>
+            <path d="M 30 125 L 42 110 L 52 131 L 65 105 L 74 135 L 90 98 L 102 138 L 114 102 L 126 134 L 140 108 L 150 129 L 162 111 L 172 124" fill="#cbd5e1" stroke="#3a3a3a" stroke-width="1" />
+            
+            <path d="M 90 165 L 92 180 L 94 167 M 115 158 L 117 174 L 119 160" stroke="#ff0000" stroke-width="2" fill="none"/>
+        </svg>
+    </div>
+
+    <script>
+        const quizData = [
+            { q: "What is the capital city of Australia?", a: ["Sydney", "Melbourne", "Canberra", "Brisbane"], c: 2 },
+            { q: "Which element has the chemical symbol 'O'?", a: ["Gold", "Oxygen", "Osmium", "Zinc"], c: 1 },
+            { q: "How many planets are in our solar system?", a: ["7", "8", "9", "10"], c: 1 },
+            { q: "Who painted the famous 'Mona Lisa'?", a: ["Van Gogh", "Picasso", "Da Vinci", "Monet"], c: 2 },
+            { q: "What is the largest ocean on Planet Earth?", a: ["Atlantic", "Indian", "Arctic", "Pacific"], c: 3 },
+            { q: "Which gas do plants absorb from the atmosphere during photosynthesis?", a: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Hydrogen"], c: 2 },
+            { q: "What is the hardest natural substance known on Earth?", a: ["Gold", "Iron", "Diamond", "Quartz"], c: 2 },
+            { q: "In what year did the Titanic sink during its maiden voyage?", a: ["1905", "1912", "1920", "1933"], c: 1 },
+            { q: "Which human organ filters toxic waste from the bloodstream?", a: ["Heart", "Lungs", "Kidneys", "Stomach"], c: 2 },
+            { q: "What is the speed of light approximately?", a: ["300,000 km/s", "150,000 km/s", "50,000 km/s", "1,000,000 km/s"], c: 0 }
+        ];
+
+        let currentQuestionIndex = 0;
+        let userScore = 0;
+        let acceptInput = true;
+
+        function startQuiz() {
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('quiz-screen').style.display = 'block';
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            acceptInput = true;
+            const currentQuiz = quizData[currentQuestionIndex];
+            const progressPercent = ((currentQuestionIndex) / quizData.length) * 100;
+            document.getElementById('progress').style.width = progressPercent + '%';
+            document.getElementById('question-text').innerText = `Question ${currentQuestionIndex + 1}: ${currentQuiz.q}`;
+
+            const optionsBox = document.getElementById('options-box');
+            optionsBox.innerHTML = '';
+
+            currentQuiz.a.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'option-btn';
+                button.innerText = option;
+                button.onclick = () => selectOption(index, button);
+                optionsBox.appendChild(button);
+            });
+        }
+
+        function selectOption(selectedIndex, clickedButton) {
+            if (!acceptInput) return;
+            acceptInput = false;
+
+            const currentQuiz = quizData[currentQuestionIndex];
+            const optionsBox = document.getElementById('options-box');
+            const allButtons = optionsBox.getElementsByClassName('option-btn');
+
+            if (selectedIndex === currentQuiz.c) {
+                clickedButton.classList.add('correct');
+                userScore++;
+            } else {
+                clickedButton.classList.add('wrong');
+                allButtons[currentQuiz.c].classList.add('correct');
+            }
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < quizData.length) {
+                    loadQuestion();
+                } else {
+                    showResults();
+                }
+            }, 1000);
+        }
+
+        function showResults() {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('final-score').innerText = userScore;
+        }
+
+        function triggerJumpscare() {
+            document.getElementById('jumpscare-overlay').style.display = 'flex';
+            playDemonicScreech();
+        }
+
+        function playDemonicScreech() {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            
+            const ctx = new AudioContext();
+            const duration = 4.0; /* Extended slightly to match the intense visual */
+            
+            const oscLow = ctx.createOscillator();
+            oscLow.type = 'sawtooth';
+            oscLow.frequency.setValueAtTime(80, ctx.currentTime);
+            oscLow.frequency.linearRampToValueAtTime(25, ctx.currentTime + duration);
+            
+            const oscHigh1 = ctx.createOscillator();
+            oscHigh1.type = 'sawtooth';
+            oscHigh1.frequency.setValueAtTime(950, ctx.currentTime);
+            oscHigh1.frequency.linearRampToValueAtTime(2100, ctx.currentTime + 0.15);
+            oscHigh1.frequency.linearRampToValueAtTime(320, ctx.currentTime + duration);
+            
+            const oscHigh2 = ctx.createOscillator();
+            oscHigh2.type = 'square';
+            oscHigh2.frequency.setValueAtTime(980, ctx.currentTime);
+            oscHigh2.frequency.linearRampToValueAtTime(2000, ctx.currentTime + 0.25);
+            oscHigh2.frequency.linearRampToValueAtTime(300, ctx.currentTime + duration);
+
+            const masterGain = ctx.createGain();
+            masterGain.gain.setValueAtTime(3.0, ctx.currentTime); /* Increased gain intensity */
+            masterGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+            
+            const tremolo = ctx.createOscillator();
+            tremolo.type = 'sine';
+            tremolo.frequency.setValueAtTime(55, ctx.currentTime); /* Faster pitch modulation */
+            const tremoloGain = ctx.createGain();
+            tremoloGain.gain.setValueAtTime(0.95, ctx.currentTime);
+
+            tremolo.connect(tremoloGain);
+            tremoloGain.connect(masterGain.gain);
+
+            oscLow.connect(masterGain);
+            oscHigh1.connect(masterGain);
+            oscHigh2.connect(masterGain);
+            
+            masterGain.connect(ctx.destination);
+            
+            oscLow.start();
+            oscHigh1.start();
+            oscHigh2.start();
+            tremolo.start();
+            
+            oscLow.stop(ctx.currentTime + duration);
+            oscHigh1.stop(ctx.currentTime + duration);
+            oscHigh2.stop(ctx.currentTime + duration);
+            tremolo.stop(ctx.currentTime + duration);
+        }
+    </script>
+</body>
+</html>
